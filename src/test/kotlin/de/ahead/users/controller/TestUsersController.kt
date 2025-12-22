@@ -86,5 +86,28 @@ class TestUsersController {
             }
     }
 
+    @Test
+    fun openApiSpec_shouldBeAvailable() {
+        //OpenAPI availability test
+        mockMvc.get("/v3/api-docs")
+            .andExpect {
+                status { isOk() }
+                content {
+                    contentType("application/json")
+                }
+                jsonPath("$.openapi") { exists() }
+                jsonPath("$.paths['/ahead/users']") { exists() }
+                jsonPath("$.paths['/ahead/users/random']") { exists() }
+            }
+    }
+
+    @Test
+    fun swaggerUi_shouldBeAvailable() {
+        //Swagger UI availability test
+        mockMvc.get("/swagger-ui/index.html")
+            .andExpect {
+                status { isOk() }
+            }
+    }
 
 }
