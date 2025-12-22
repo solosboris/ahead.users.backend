@@ -54,4 +54,37 @@ class TestUsersController {
             }
     }
 
+    @Test
+    fun postRandomUser_shouldReturnMethodNotAllowed() {
+        mockMvc.post("/ahead/users/random")
+            .andExpect {
+                status { isMethodNotAllowed() }
+            }
+    }
+
+    @Test
+    fun unknownEndpoint_shouldReturnNotFound() {
+        mockMvc.get("/ahead/users/does-not-exist")
+            .andExpect {
+                status { isNotFound() }
+            }
+    }
+
+    @Test
+    fun wrongBasePath_shouldReturnNotFound() {
+        mockMvc.get("/users")
+            .andExpect {
+                status { isNotFound() }
+            }
+    }
+
+    @Test
+    fun deleteUsers_shouldReturnMethodNotAllowed() {
+        mockMvc.delete("/ahead/users")
+            .andExpect {
+                status { isMethodNotAllowed() }
+            }
+    }
+
+
 }
