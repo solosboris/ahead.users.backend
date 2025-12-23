@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -14,7 +15,8 @@ class TestCorsIntegration {
 
     @Autowired
     lateinit var mockMvc: MockMvc
-    var frontendRootURL: String = "http://localhost:5173"
+    private var frontendRootURL: String = "http://localhost:5173"
+
 
     @Test
     fun testPreflightVueDevServerAllowedAll() {
@@ -72,6 +74,53 @@ class TestCorsIntegration {
                 content()
                 .contentTypeCompatibleWith("application/json")
             )
+    }
+
+    @Test
+    fun testPreflightAllowedOrigins() {
+        val allowedOrigins = listOf(
+            frontendRootURL,
+            "http://localhost:8080"
+        )
+
+        allowedOrigins.forEach { origin ->
+            mockMvc.perform(
+                options("/users")  // Test endpoint
+                    .header(HttpHeaders.ORIGIN, origin)
+                    .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+            ).andExpect(status().isOk
+            ).andExpect(
+                header().string(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin
+                )
+            ).andExpect(
+                header().string(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,POST,PUT,DELETE,OPTIONS"
+                )
+            )
+        }
+    }
+
+    @Test
+    fun testPreflightDisallowedOrigins() {
+        mockMvc.perform(
+            options("/users")
+                .header(HttpHeaders.ORIGIN, "http://malicious.com")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+        ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun testPreflightAllowedOriginsCORSHeaders() {
+        mockMvc.perform(
+            get("/users")
+                .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+        ).andExpect(status().isOk
+        ).andExpect(
+            header().string(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, frontendRootURL
+                )
+        )
     }
 
 }
