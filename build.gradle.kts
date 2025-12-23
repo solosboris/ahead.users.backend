@@ -44,6 +44,21 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
+tasks.test {
+    useJUnitPlatform()
+
+    // JUnit XML Report
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
+    }
+
+    // enable test logging
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
 
