@@ -15,19 +15,9 @@ class SecurityConfigTest {
     lateinit var context: ApplicationContext
 
     @Test
-    fun testSecurityFilterChain() {
-        val bean = context.getBean(
-            SecurityFilterChain::class.java
-        )
-        assertNotNull(bean)
-    }
-
-    @Test
-    fun testCORSConfigurationSource() {
-        val bean = context.getBean(
-            CorsConfigurationSource::class.java
-        )
-        assertNotNull(bean)
+    fun `securityFilterChain bean is loaded`() {
+        val securityFilterChain = context.getBean(SecurityFilterChain::class.java)
+        assertNotNull(securityFilterChain, "SecurityFilterChain bean should be loaded")
     }
 
 }

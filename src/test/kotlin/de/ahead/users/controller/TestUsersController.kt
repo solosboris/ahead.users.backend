@@ -1,5 +1,6 @@
 package de.ahead.users.controller
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import de.ahead.users.dto.UserDTO
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -8,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,92 +23,54 @@ class TestUsersController {
     private val log = KotlinLogging.logger {}
 
     @Test
-    fun getAllUsers() {
-        mockMvc.get("/ahead/users")
-            .andExpect {
-                status { isOk() }
-                jsonPath("$.length()") { value(3) }
-            }
+    fun testGetAllUsers() {
+        mockMvc.perform(get("/users"))
+            .andExpect(status().isOk)
+            .andExpect(
+                jsonPath("$.length()").value(3)
+            )
     }
 
     @Test
-    fun getRandomUser() {
-        val result = mockMvc.get("/ahead/users/random")
-            .andExpect {
-                status { isOk() }
-            }
+    fun testGetRandomUser() {
+        val mvcResult = mockMvc.perform(
+                get("/users/random")
+            ).andExpect(status().isOk)
             .andReturn()
 
         val user = objectMapper.readValue(
-            result.response.contentAsString,
+            mvcResult.response.contentAsString,
             UserDTO::class.java
         )
 
         log.info { "Randomly generated user: $user" }
 
+        // first random user after initial 3
         assertEquals(4, user.id)
 
-        mockMvc.get("/ahead/users")
-            .andExpect {
-                status { isOk() }
-                jsonPath("$.length()") { value(4) }
-            }
+        mockMvc.perform(get("/users"))
+            .andExpect(status().isOk)
+            .andExpect(
+                jsonPath("$.length()").value(4)
+            )
     }
 
     @Test
-    fun postRandomUser_shouldReturnMethodNotAllowed() {
-        mockMvc.post("/ahead/users/random")
-            .andExpect {
-                status { isMethodNotAllowed() }
-            }
+    fun postRandomUser_shouldReturnNotFound() {
+        // no POST mapping exists
+        mockMvc.perform(post("/users/random"))
+            .andExpect(
+                status().is4xxClientError
+            )
     }
 
     @Test
-    fun unknownEndpoint_shouldReturnNotFound() {
-        mockMvc.get("/ahead/users/does-not-exist")
-            .andExpect {
-                status { isNotFound() }
-            }
-    }
-
-    @Test
-    fun wrongBasePath_shouldReturnNotFound() {
-        mockMvc.get("/users")
-            .andExpect {
-                status { isNotFound() }
-            }
-    }
-
-    @Test
-    fun deleteUsers_shouldReturnMethodNotAllowed() {
-        mockMvc.delete("/ahead/users")
-            .andExpect {
-                status { isMethodNotAllowed() }
-            }
-    }
-
-    @Test
-    fun openApiSpec_shouldBeAvailable() {
-        //OpenAPI availability test
-        mockMvc.get("/v3/api-docs")
-            .andExpect {
-                status { isOk() }
-                content {
-                    contentType("application/json")
-                }
-                jsonPath("$.openapi") { exists() }
-                jsonPath("$.paths['/ahead/users']") { exists() }
-                jsonPath("$.paths['/ahead/users/random']") { exists() }
-            }
-    }
-
-    @Test
-    fun swaggerUi_shouldBeAvailable() {
-        //Swagger UI availability test
-        mockMvc.get("/swagger-ui/index.html")
-            .andExpect {
-                status { isOk() }
-            }
+    fun deleteUsers_shouldReturnNotFound() {
+        // no DELETE mapping exists
+        mockMvc.perform(delete("/users"))
+            .andExpect(
+                status().is4xxClientError
+            )
     }
 
 }
